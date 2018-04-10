@@ -29,12 +29,39 @@ class User(db.Model):
         self.email = email
         self.password = password
 
-@app.rounte('/login')
+@app.route('/login', methods=['POST', 'GET'])
 def login():
+    email= request.form['email']
+    password = request.form['password']
+    user = User.query.filter_by(email=email).first()
+    if user and user.password == password:
+        # Todo - "remember" that the user has logged in
+        return redirect('/')
+    else:
+        # Todo - explain why login failed
+        return "<h1>Error!<h1>"
+    
     return render_template('login.html')
 
-@app.route('/register')
+@app.route('/register', methods=['POST', 'GET'])
 def register():
+    email = request.form['email']
+    password = request.form['password']
+    verify = request.form['verify']
+
+    # Todo - validate user's data
+
+    existing_user = User.query.filter_by(email=email).first()
+    if not existing_user:
+        new_user = User(new_user)
+        db.session.add(new_user)
+        db.session.commit()
+        # Todo - "remember" the user
+        return redirect('/')
+    else:
+        # Todo - user better response messaging
+        return "<h1>Duplicate user</h1>"
+    
     return render_template('register.html')
 
 @app.route('/', methods=['POST', 'GET'])
