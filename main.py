@@ -8,6 +8,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://get-it-done:beproductive@localhost:8889/get-it-done'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = 'y337kGcys&zP3B'
 
 class Task(db.Model):
 
@@ -28,6 +29,12 @@ class User(db.Model):
     def __init__(self, email, password):
         self.email = email
         self.password = password
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'register']
+    if request.endpoint not in allowed_routes and 'email' not in session:
+        return redirect('/login')
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -63,6 +70,11 @@ def register():
         return "<h1>Duplicate user</h1>"
     
     return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    del session['email']
+    return redirect('/')
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
