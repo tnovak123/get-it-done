@@ -41,7 +41,7 @@ def require_login():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    email= request.form['email']
+    email = request.form['email']
     password = request.form['password']
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
