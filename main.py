@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -28,12 +29,18 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(120))
+    password = db.Column(db.String(255))
     tasks = db.relationship('Task', backref='owner')
 
     def __init__(self, email, password):
         self.email = email
-        self.password = password
+        self.set_password(password)
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
 
 
 @app.before_request
@@ -49,7 +56,7 @@ def login():
         email = request.form['email']
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
-        if user and user.password == password:
+        if user and user.check_password(password):
             session['email'] = email
             flash("Logged in")
             return redirect('/')
