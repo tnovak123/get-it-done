@@ -5,8 +5,10 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://get-it-done:beproductive@localhost:8889/get-it-done'
 app.config['SQLALCHEMY_ECHO'] = True
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'y337kGcys&zP3B'
+
 db = SQLAlchemy(app)
-app.secret_key = 'y337kGcys&zP3B'
 
 
 class Task(db.Model):
@@ -32,6 +34,7 @@ class User(db.Model):
     def __init__(self, email, password):
         self.email = email
         self.password = password
+
 
 @app.before_request
 def require_login():
@@ -78,9 +81,10 @@ def register():
 
     return render_template('register.html')
 
+
 @app.route('/logout')
 def logout():
-    del session['email']
+    session.pop('email', None)
     return redirect('/')
 
 
@@ -95,9 +99,9 @@ def index():
         db.session.add(new_task)
         db.session.commit()
 
-    tasks = Task.query.filter_by(completed=False,owner=owner).all()
-    completed_tasks = Task.query.filter_by(completed=True,owner=owner).all()
-    return render_template('todos.html',title="Get It Done!", 
+    tasks = Task.query.filter_by(completed=False, owner=owner).all()
+    completed_tasks = Task.query.filter_by(completed=True, owner=owner).all()
+    return render_template('todos.html', title="Get It Done!",
         tasks=tasks, completed_tasks=completed_tasks)
 
 
@@ -105,7 +109,7 @@ def index():
 def delete_task():
 
     task_id = int(request.form['task-id'])
-    task = Task.query.get(task_id)
+    task = db.session.get(Task, task_id)
     task.completed = True
     db.session.add(task)
     db.session.commit()
